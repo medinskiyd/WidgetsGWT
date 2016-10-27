@@ -21,13 +21,23 @@
         <url-pattern>/MySampleApplication/stockPrices</url-pattern>
     </servlet-mapping>
 
-    <!--<servlet>-->
-        <!--<servlet-name>MySampleApplication MySampleApplicationService</servlet-name>-->
-        <!--<servlet-class>com.mySampleApplication.server.MySampleApplicationServiceImpl</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>MySampleApplication MySampleApplicationService</servlet-name>-->
-        <!--<url-pattern>/MySampleApplication/MySampleApplicationService</url-pattern>-->
-    <!--</servlet-mapping>-->
+    <servlet>
+        <servlet-name>MySampleApplication MySampleApplicationService</servlet-name>
+        <servlet-class>com.mySampleApplication.server.MySampleApplicationServiceImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MySampleApplication MySampleApplicationService</servlet-name>
+        <url-pattern>/MySampleApplication/MySampleApplicationService</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>jsonStockData</servlet-name>
+        <servlet-class>com.mySampleApplication.server.JsonStockData</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>jsonStockData</servlet-name>
+        <url-pattern>/MySampleApplication/stockPricesJSON</url-pattern>
+    </servlet-mapping>
 
 </web-app>

@@ -20,5 +20,4 @@
 
     <!-- Specify the app servlets.                   -->
     <servlet path='/MySampleApplication' class='com.mySampleApplication.server.MySampleApplicationServiceImpl'/>
-
 </module>
