@@ -2,17 +2,20 @@ package com.mySampleApplication.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsonUtils;
 import com.google.gwt.event.dom.client.*;
+import com.google.gwt.http.client.*;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>
@@ -20,6 +23,7 @@ import java.util.Date;
 public class MySampleApplication implements EntryPoint {
 
     private static final int REFRESH_INTERVAL = 5000; // ms
+    private static final String JSON_URL = GWT.getModuleBaseURL() + "stockPricesJSON?q=";
 
     private Button button = new Button("Click me");
     private Button button1 = new Button("Test button");
@@ -201,46 +205,106 @@ public class MySampleApplication implements EntryPoint {
 
     }
 
+
     /**
-     * Generate random stock prices.
+     * Generate random stock prices (JSON example version).
      */
     private void refreshWatchList() {
-        // Initialize the service proxy.
-        if (stockPriceSvc == null) {
-            stockPriceSvc = GWT.create(StockPriceService.class);
+        if (stocks.size() == 0) {
+            return;
         }
 
-        // Set up the callback object.
-        AsyncCallback<StockPrice[]> callback = new AsyncCallback<StockPrice[]>() {
-            public void onFailure(Throwable caught) {
-                // If the stock code is in the list of delisted codes, display an error message.
-                String details = caught.getMessage();
-                if (caught instanceof DelistedException) {
-                    details = "Company '" + ((DelistedException)caught).getSymbol() + "' was delisted";
+        String url = JSON_URL;
+
+        // Append watch list stock symbols to query URL.
+        Iterator<String> iter = stocks.iterator();
+        while (iter.hasNext()) {
+            url += iter.next();
+            if (iter.hasNext()) {
+                url += "+";
+            }
+        }
+
+        url = URL.encode(url);
+
+        //Create new builder for GET request.
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
+
+        try {
+            //Create new request.
+            Request request = builder.sendRequest(null, new RequestCallback() {
+                public void onError(Request request, Throwable exception) {
+                    displayError("Couldn't retrieve JSON");
                 }
 
-                errorMsgLabel.setText("Error: " + details);
-                errorMsgLabel.setVisible(true);
-            }
-
-            public void onSuccess(StockPrice[] result) {
-                updateTable(result);
-            }
-        };
-
-        // Make the call to the stock price service.
-        stockPriceSvc.getPrices(stocks.toArray(new String[0]), callback);
+                public void onResponseReceived(Request request, Response response) {
+                    if (200 == response.getStatusCode()) {
+                        updateTable(JsonUtils.<JsArray<StockData>>safeEval(response.getText()));
+                    } else {
+                        displayError("Couldn't retrieve JSON (" + response.getStatusText()
+                                + ")");
+                    }
+                }
+            });
+        } catch (RequestException e) {
+            displayError("Couldn't retrieve JSON");
+        }
     }
 
     /**
-     * Update the Price and Change fields all the rows in the stock table.
-     *
-     * @param prices
-     *          Stock data for all rows.
+     * Generate random stock prices (AJAX, RPC - async version).
      */
-    private void updateTable(StockPrice[] prices) {
-        for (int i = 0; i < prices.length; i++) {
-            updateTable(prices[i]);
+//    private void refreshWatchList() {
+//        // Initialize the service proxy.
+//        if (stockPriceSvc == null) {
+//            stockPriceSvc = GWT.create(StockPriceService.class);
+//        }
+//
+//        // Set up the callback object.
+//        AsyncCallback<StockPrice[]> callback = new AsyncCallback<StockPrice[]>() {
+//            public void onFailure(Throwable caught) {
+//                // If the stock code is in the list of delisted codes, display an error message.
+//                String details = caught.getMessage();
+//                if (caught instanceof DelistedException) {
+//                    details = "Company '" + ((DelistedException)caught).getSymbol() + "' was delisted";
+//                }
+//
+//                errorMsgLabel.setText("Error: " + details);
+//                errorMsgLabel.setVisible(true);
+//            }
+//
+//            public void onSuccess(StockPrice[] result) {
+//                updateTable(result);
+//            }
+//        };
+//
+//        // Make the call to the stock price service.
+//        stockPriceSvc.getPrices(stocks.toArray(new String[0]), callback);
+//    }
+
+//    /**
+//     * Ajax RPC example.
+//     *
+//     * Update the Price and Change fields all the rows in the stock table.
+//     *
+//     * @param prices
+//     *          Stock data for all rows.
+//     */
+//    private void updateTable(StockPrice[] prices) {
+//        for (int i = 0; i < prices.length; i++) {
+//            updateTable(prices[i]);
+//        }
+//
+//        // Display timestamp showing last refresh.
+//        lastUpdatedLabel.setText("Last update : " +
+//                new Date());
+//
+//        // Clear any errors.
+//        errorMsgLabel.setVisible(false);
+//    }
+    private void updateTable(JsArray<StockData> prices) {
+        for (int i = 0; i < prices.length(); i++) {
+            updateTable(prices.get(i));
         }
 
         // Display timestamp showing last refresh.
@@ -252,11 +316,57 @@ public class MySampleApplication implements EntryPoint {
     }
 
     /**
+     * AJAX RCP eample.
+     *
      * Update a single row in the stock table.
      *
      * @param price Stock data for a single row.
      */
-    private void updateTable(StockPrice price) {
+//    private void updateTable(StockPrice price) {
+//        // Make sure the stock is still in the stock table.
+//        if (!stocks.contains(price.getSymbol())) {
+//            return;
+//        }
+//
+//        // Display timestamp showing last refresh.
+//        DateTimeFormat dateFormat = DateTimeFormat.getFormat(
+//                DateTimeFormat.PredefinedFormat.DATE_TIME_MEDIUM);
+//        lastUpdatedLabel.setText(messages.lastUpdate(new Date()));
+//
+//        int row = stocks.indexOf(price.getSymbol()) + 1;
+//
+//        // Format the data in the Price and Change fields.
+//        String priceText = NumberFormat.getFormat("#,##0.00").format(
+//                price.getPrice());
+//        NumberFormat changeFormat = NumberFormat.getFormat("+#,##0.00;-#,##0.00");
+//        String changeText = changeFormat.format(price.getChange());
+//        String changePercentText = changeFormat.format(price.getChangePercent());
+//
+//        // Populate the Price and Change fields with new data.
+//        stocksFlexTable.setText(row, 1, priceText);
+//        Label changeWidget = (Label)stocksFlexTable.getWidget(row, 2);
+//        changeWidget.setText(changeText + " (" + changePercentText + "%)");
+//
+//        // Change the color of text in the Change field based on its value.
+//        String changeStyleName = "noChange";
+//        if (price.getChangePercent() < -0.1f) {
+//            changeStyleName = "negativeChange";
+//        }
+//        else if (price.getChangePercent() > 0.1f) {
+//            changeStyleName = "positiveChange";
+//        }
+//
+//        changeWidget.setStyleName(changeStyleName);
+//    }
+
+    /**
+     * JSON example.
+     * <p>
+     * Update a single row in the stock table.
+     *
+     * @param price Stock data for a single row.
+     */
+    private void updateTable(StockData price) {
         // Make sure the stock is still in the stock table.
         if (!stocks.contains(price.getSymbol())) {
             return;
@@ -278,19 +388,29 @@ public class MySampleApplication implements EntryPoint {
 
         // Populate the Price and Change fields with new data.
         stocksFlexTable.setText(row, 1, priceText);
-        Label changeWidget = (Label)stocksFlexTable.getWidget(row, 2);
+        Label changeWidget = (Label) stocksFlexTable.getWidget(row, 2);
         changeWidget.setText(changeText + " (" + changePercentText + "%)");
 
         // Change the color of text in the Change field based on its value.
         String changeStyleName = "noChange";
         if (price.getChangePercent() < -0.1f) {
             changeStyleName = "negativeChange";
-        }
-        else if (price.getChangePercent() > 0.1f) {
+        } else if (price.getChangePercent() > 0.1f) {
             changeStyleName = "positiveChange";
         }
 
         changeWidget.setStyleName(changeStyleName);
     }
+
+    /**
+     * If can't get JSON, display error message.
+     *
+     * @param error
+     */
+    private void displayError(String error) {
+        errorMsgLabel.setText("Error: " + error);
+        errorMsgLabel.setVisible(true);
+    }
+
 
 }
