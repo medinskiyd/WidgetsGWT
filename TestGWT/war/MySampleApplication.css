@@ -60,3 +60,11 @@ body {
 .pic {
     text-align: center;
 }
+
+.negativeChange {
+    color: red;
+}
+
+.errorMessage {
+    color: red;
+}

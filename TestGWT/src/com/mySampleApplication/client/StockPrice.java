@@ -1,10 +1,13 @@
 package com.mySampleApplication.client;
 
+
+import com.google.gwt.user.client.rpc.IsSerializable;
+
 /**
  * @author dmme1016
  * @since 10/26/2016
  */
-public class StockPrice {
+public class StockPrice implements IsSerializable {
 
     private String symbol;
     private double price;
