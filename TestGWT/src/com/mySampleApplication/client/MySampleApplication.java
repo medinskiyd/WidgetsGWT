@@ -61,7 +61,7 @@ public class MySampleApplication implements EntryPoint {
 
         button1.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
-                MySampleApplicationService.App.getInstance().getMessage("TEST TEST TEST", "You clicked button \"Just a test.\"", new MyAsyncCallback(label));
+                MySampleApplicationService.App.getInstance().getMessage("TEST TEST TEST", "You clicked button \"Just a com.mySampleApplication.test.\"", new MyAsyncCallback(label));
             }
         });
 
@@ -69,7 +69,7 @@ public class MySampleApplication implements EntryPoint {
         Window.setTitle(constants.stockWatcher());
         RootPanel.get("appTitle").add(new Label(constants.stockWatcher()));
         RootPanel.get("valid").add(new Label(constants.valid()));
-        RootPanel.get("test").add(new Label(constants.test()));
+        RootPanel.get("com/mySampleApplication/test").add(new Label(constants.test()));
         RootPanel.get("gwt").add(new Label(constants.gwt()));
 
         addStockButton = new Button(constants.add());
